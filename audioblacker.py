@@ -60,6 +60,7 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
     video_format = ''
     video_duration = ''
     video_bitrate = ''
+    ff = ''
     #demux audio file
     # Add this to save time, for experienced users
     print('INFO: Checking audio and remux...')
@@ -73,26 +74,30 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
                     audio_duration = str(line.split('=')[1])
         except:
             print('ERROR: Cannot read audio file!')
+            shutil.rmtree(tmpdir)
             exit()
     else:
         os.system('ffmpeg -i \'' + filename + '\' -vn -c:a copy ' + tmpdir+'/audio.aac' +'> /dev/null 2>&1')
         try:
             for line in probe_file(tmpdir+'/audio.aac').split('\n'):
-                    if 'format_name' in line:
-                        audio_format = str(line.split('=')[1])
-                    if 'duration' in line:
-                        audio_duration = str(line.split('=')[1])
-            print('INFO: Audio safe, converting to m4a and clean cache...')
-            os.system('ffmpeg -i '+ tmpdir+'/audio.aac -vn -c:a copy ' + tmpdir+'/audio.m4a' +'> /dev/null 2>&1')
+                if 'format_name' in line:
+                    audio_format = str(line.split('=')[1])
+                if 'duration' in line:
+                    audio_duration = str(line.split('=')[1])
+            print('INFO: Converting to m4a and clean cache...')
+            os.system('ffmpeg -i \'' + filename + '\' -vn -c:a copy ' + tmpdir+'/audio.m4a' +'> /dev/null 2>&1')
             try:
-                os.remove(tmpdir+'/audio.aac')
+                #os.remove(tmpdir+'/audio.aac')
+                pass
             except:
                 print('WARNING: Cannot remove the aac file now...')
         except:
             print('ERROR: Cannot read audio file!')
+            shutil.rmtree(tmpdir)
             exit()
         #In case someone screw the audio up
         if not 'aac' in audio_format:
+            print(audio_format)
             print('ERROR: You have to use AAC as audio format!')
             exit()
     #Check original file
@@ -102,17 +107,23 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
                     video_duration = str(line.split('=')[1])
     except:
         print('ERROR: Cannot read video file!')
+        shutil.rmtree(tmpdir)
         exit()
     #Calc...
     #time_by_video
     print('INFO: Doing calculation...')
-    video_duration_sec = time_to_sec(video_duration)
-    video_size_byte = int(os.path.getsize(filename))
-    audio_duration_sec = time_to_sec(audio_duration)
-    audio_size_byte = int(os.path.getsize(tmpdir+'/audio.m4a'))
+    try:
+        video_duration_sec = time_to_sec(video_duration)
+        video_size_byte = int(os.path.getsize(filename))
+        audio_duration_sec = time_to_sec(audio_duration)
+        audio_size_byte = int(os.path.getsize(tmpdir+'/audio.m4a'))
+    except:
+        print('ERROR: Cannot calculate time, did you input a bitrate too high?')
+        shutil.rmtree(tmpdir)
+        exit()
     #!!!!!FLOAT DUE TO ACCURACY!!!!!
-    target_byterate = target_bitrate / 8
-    target_audiobyterate = audiobitrate / 8 
+    target_byterate = target_bitrate / 8.0
+    target_audiobyterate = audiobitrate / 8.0
     time_video = int(math.ceil((video_size_byte - target_byterate * video_duration_sec) / (target_byterate - 300)))
     time_audio = int(math.ceil((audio_size_byte - target_audiobyterate * audio_duration_sec) / (target_audiobyterate - 300)))
     if time_audio < 0 and time_video < 0:
@@ -126,14 +137,13 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
     else:
         time_patch = time_video + 10
     #Make audio patch
+    print('INFO: Adding ' + str(time_patch) + ' secs to audio...')
     f = open(tmpdir + '/audiocode.txt', 'w')
     ff = 'file \'' + tmpdir + '/audio.m4a\'' + '\n'
-    os.getcwd()
     py_path = sys.path[0]
     os.chdir(py_path)
     for i in range(time_patch):
         ff = ff + 'file \'' + str(os.getcwd()) + '/'+ '1sblack.m4a\'' + '\n'
-    ff = ff.encode("utf8")
     f.write(ff)
     f.close()
     print('INFO: Concating audios...')
@@ -152,7 +162,7 @@ def usage():
     """"""
     print('''Usage:
     
-    python audioblacker.py (-h) (-i input.mp4) (-o output.mp4) (-b 1990000) (-a 120000) (-s 1)
+    python audioblacker.py (-h) (-i input.mp4) (-o output.mp4) (-b 1900000) (-a 110000) (-s 1)
     
     -h: Default: None
         Help.
@@ -166,7 +176,7 @@ def usage():
        Output file.
        Would be in the same folder with the original file if not specified.
        
-    -b: Default: 1990000
+    -b: Default: 1900000
         Target bitrate.
     
     -a: Default: 110000
@@ -174,6 +184,9 @@ def usage():
         
     audioblacker would calculate both of the required black time,
     and choose the larger one to make sure your convert is successful.
+    
+    Please notice that if your original video/audio bitrate is too small,
+    audioblacker would throw you an ERROR and quit.
     
     -s: Default: 1
         Use safe mode.
@@ -188,7 +201,7 @@ if __name__=='__main__':
     argv_list = []
     argv_list = sys.argv[1:]
     filename = ''
-    target_bitrate = 1990000
+    target_bitrate = 1900000
     outputfile = ''
     safe = 1
     audiobitrate = 110000
@@ -236,5 +249,9 @@ if __name__=='__main__':
         print('ERROR: No input file!')
         exit()
     if outputfile == '':
-        outputfile = filename.split('.')[0] + '.black.mp4'
+        outputfile = filename.split('.')[0]
+        for i in filename.split('.')[1:-1]:
+            outputfile = outputfile + '.' + i
+        outputfile = outputfile + '.black.mp4'
     process(filename, target_bitrate, audiobitrate, safe, outputfile)
+    exit()

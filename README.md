@@ -16,7 +16,9 @@ Requirement
 Usage
 ------
 
-    python audioblacker.py (-h) (-i input.mp4) (-o output.mp4) (-b 1990000) (-a 120000) (-s 1)
+    Usage:
+    
+    python audioblacker.py (-h) (-i input.mp4) (-o output.mp4) (-b 1900000) (-a 110000) (-s 1)
     
     -h: Default: None
         Help.
@@ -30,7 +32,7 @@ Usage
        Output file.
        Would be in the same folder with the original file if not specified.
        
-    -b: Default: 1990000
+    -b: Default: 1900000
         Target bitrate.
     
     -a: Default: 110000
@@ -38,6 +40,9 @@ Usage
         
     audioblacker would calculate both of the required black time,
     and choose the larger one to make sure your convert is successful.
+    
+    Please notice that if your original video/audio bitrate is too small,
+    audioblacker would throw you an ERROR and quit.
     
     -s: Default: 1
         Use safe mode.
@@ -65,5 +70,7 @@ Misc
 
 History
 ----
+
+0.2: Fix accuracy; Fix safemode failed; Fix codec; Fix if filename contain '.' the auto filename would failed; Change default 
 
 0.1: The very beginning
