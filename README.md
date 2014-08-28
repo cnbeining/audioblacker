@@ -71,6 +71,8 @@ Misc
 History
 ----
 
+0.21: Fix if some metadata included the programme would failed
+
 0.2: Fix accuracy; Fix safemode failed; Fix codec; Fix if filename contain '.' the auto filename would failed; Change default 
 
 0.1: The very beginning

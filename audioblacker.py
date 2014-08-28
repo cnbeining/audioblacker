@@ -105,6 +105,8 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
         for line in probe_file(filename).split('\n'):
                 if 'duration' in line:
                     video_duration = str(line.split('=')[1])
+                    break
+                    
     except:
         print('ERROR: Cannot read video file!')
         shutil.rmtree(tmpdir)
