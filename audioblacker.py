@@ -87,7 +87,7 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
             print('INFO: Converting to m4a and clean cache...')
             os.system('ffmpeg -i \'' + filename + '\' -vn -c:a copy ' + tmpdir+'/audio.m4a' +'> /dev/null 2>&1')
             try:
-                #os.remove(tmpdir+'/audio.aac')
+                os.remove(tmpdir+'/audio.aac')
                 pass
             except:
                 print('WARNING: Cannot remove the aac file now...')
@@ -126,8 +126,8 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
     #!!!!!FLOAT DUE TO ACCURACY!!!!!
     target_byterate = target_bitrate / 8.0
     target_audiobyterate = audiobitrate / 8.0
-    time_video = int(math.ceil((video_size_byte - target_byterate * video_duration_sec) / (target_byterate - 300)))
-    time_audio = int(math.ceil((audio_size_byte - target_audiobyterate * audio_duration_sec) / (target_audiobyterate - 300)))
+    time_video = int(math.ceil((video_size_byte - target_byterate * video_duration_sec) / (target_byterate - 470)))
+    time_audio = int(math.ceil((audio_size_byte - target_audiobyterate * audio_duration_sec) / (target_audiobyterate - 470)))
     if time_audio < 0 and time_video < 0:
         print('ERROR: Cannot calculate target, your target bitrate is higher than the original file!')
         shutil.rmtree(tmpdir)
@@ -139,13 +139,12 @@ def process(filename, target_bitrate, audiobitrate, safe, outputfile):
     else:
         time_patch = time_video + 10
     #Make audio patch
-    print('INFO: Adding ' + str(time_patch) + ' secs to audio...')
+    print('INFO: Making ' + str(time_patch) + ' secs blank audio...')
+    os.system('ffmpeg -filter_complex \'aevalsrc=0:d=' + str(time_patch) + '\' -strict experimental -c:a aac ' + tmpdir + '/black.m4a'+'> /dev/null 2>&1')
     f = open(tmpdir + '/audiocode.txt', 'w')
-    ff = 'file \'' + tmpdir + '/audio.m4a\'' + '\n'
+    ff = 'file \'' + tmpdir + '/audio.m4a\'' + '\n' + 'file \'' + tmpdir + '/black.m4a\''
     py_path = sys.path[0]
     os.chdir(py_path)
-    for i in range(time_patch):
-        ff = ff + 'file \'' + str(os.getcwd()) + '/'+ '1sblack.m4a\'' + '\n'
     f.write(ff)
     f.close()
     print('INFO: Concating audios...')

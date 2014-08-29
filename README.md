@@ -9,7 +9,7 @@ Requirement
 -------
 
 - Python 2.7
-- ffmpeg
+- ffmpeg, with own aac encoder(every ffmpeg should comes with this)
 - ffprobe
 - Enough spare space: the size of the original video plus 2 (3 if use safe mode with auto-cleaning failed) times of the audio stream.
 
@@ -68,8 +68,23 @@ Misc
 
 - This method is enlightened by @七音弦樱 and @LYF.
 
+- Also enlightened by @StarBrilliant.
+
+- Test result of looooooooooooooooooooong blank aac made by ffmpeg:
+    speed: around 4min/s, both on Vultr and my MBP
+   
+    10s 467B/s
+    100s 466B/s
+    1000s 465B/s
+    10000s 455B/s
+    100000s 455B/s
+
+
+
 History
 ----
+
+0.3: Use ffmpeg's own encoder to make blank audio, save space and use less file; Fix forgot to uncomment; 
 
 0.21: Fix if some metadata included the programme would failed
 
